@@ -9,12 +9,16 @@ industry_data_path = "IIP_Data.xlsx"
 industry_df = pd.read_excel(industry_data_path, parse_dates=["Date"])
 
 # Function to get stock list
-def get_stock_list():
-    stock_files = [f for f in os.listdir(stock_data_folder) if f.endswith('.xlsx')]
-    return stock_files
+def get_stock_list(stock_data_folder):
+    try:
+        stock_files = [f for f in os.listdir(stock_data_folder) if f.endswith('.xlsx')]
+        return stock_files
+    except FileNotFoundError:
+        st.error(f"The specified stock data folder '{stock_data_folder}' was not found.")
+        return []
 
 # Function to get stock data
-def get_stock_data(stock_file):
+def get_stock_data(stock_data_folder, stock_file):
     stock_path = os.path.join(stock_data_folder, stock_file)
     stock_df = pd.read_excel(stock_path, parse_dates=["Date"])
     return stock_df
@@ -58,16 +62,23 @@ if uploaded_stock_revenue_file is not None:
     # Select industry
     selected_industry = st.selectbox("Select Industry", industry_df.columns[1:])
 
+    # Select stock data folder
+    stock_data_folder = st.text_input("Enter Stock Data Folder Path:", "Stock_Data")
+
     # Select stock
-    selected_stock = st.selectbox("Select Stock", get_stock_list())
-    selected_stock_df = get_stock_data(selected_stock)
+    stock_list = get_stock_list(stock_data_folder)
+    if not stock_list:
+        st.warning("No stock data files found in the specified folder.")
+    else:
+        selected_stock = st.selectbox("Select Stock", stock_list)
+        selected_stock_df = get_stock_data(stock_data_folder, selected_stock)
 
-    # Display selected industry and stock data
-    st.write("Selected Industry Data:")
-    st.write(industry_df[["Date", selected_industry]])
+        # Display selected industry and stock data
+        st.write("Selected Industry Data:")
+        st.write(industry_df[["Date", selected_industry]])
 
-    st.write("Selected Stock Data:")
-    st.write(selected_stock_df)
+        st.write("Selected Stock Data:")
+        st.write(selected_stock_df)
 
-    # Plot correlation and trendline analysis
-    plot_correlation_trendline(stock_revenue_df, industry_df, selected_stock_df, selected_industry)
+        # Plot correlation and trendline analysis
+        plot_correlation_trendline(stock_revenue_df, industry_df, selected_stock_df, selected_industry)
