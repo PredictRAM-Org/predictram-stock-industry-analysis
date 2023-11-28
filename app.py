@@ -8,13 +8,6 @@ import seaborn as sns
 industry_data_path = "IIP_Data.xlsx"
 industry_df = pd.read_excel(industry_data_path, parse_dates=["Date"])
 
-# Load initial stock revenue data
-stock_revenue_path = "stock_revenue.xlsx"
-stock_revenue_df = pd.read_excel(stock_revenue_path, parse_dates=["Date"])
-
-# Load stock data
-stock_data_folder = "Stock_Data"
-
 # Function to get stock list
 def get_stock_list():
     stock_files = [f for f in os.listdir(stock_data_folder) if f.endswith('.xlsx')]
@@ -62,19 +55,19 @@ uploaded_stock_revenue_file = st.file_uploader("Upload Stock Revenue File (xlsx)
 if uploaded_stock_revenue_file is not None:
     stock_revenue_df = pd.read_excel(uploaded_stock_revenue_file, parse_dates=["Date"])
 
-# Select industry
-selected_industry = st.selectbox("Select Industry", industry_df.columns[1:])
+    # Select industry
+    selected_industry = st.selectbox("Select Industry", industry_df.columns[1:])
 
-# Select stock
-selected_stock = st.selectbox("Select Stock", get_stock_list())
-selected_stock_df = get_stock_data(selected_stock)
+    # Select stock
+    selected_stock = st.selectbox("Select Stock", get_stock_list())
+    selected_stock_df = get_stock_data(selected_stock)
 
-# Display selected industry and stock data
-st.write("Selected Industry Data:")
-st.write(industry_df[["Date", selected_industry]])
+    # Display selected industry and stock data
+    st.write("Selected Industry Data:")
+    st.write(industry_df[["Date", selected_industry]])
 
-st.write("Selected Stock Data:")
-st.write(selected_stock_df)
+    st.write("Selected Stock Data:")
+    st.write(selected_stock_df)
 
-# Plot correlation and trendline analysis
-plot_correlation_trendline(stock_revenue_df, industry_df, selected_stock_df, selected_industry)
+    # Plot correlation and trendline analysis
+    plot_correlation_trendline(stock_revenue_df, industry_df, selected_stock_df, selected_industry)
