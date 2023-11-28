@@ -1,4 +1,3 @@
-import os
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -20,7 +19,7 @@ def load_stock_data(file_path):
 # Function to calculate correlation and trendline analysis
 def calculate_correlation_and_trend(stock_data, industry_data, selected_stock, selected_industry):
     # Filter selected stock and industry data
-    selected_stock_data = stock_data[stock_data["Stock Symbol"] == selected_stock]
+    selected_stock_data = stock_data.loc[selected_stock]
     selected_industry_data = industry_data[selected_industry]
 
     # Merge stock and industry data on the "Date" column
@@ -55,13 +54,10 @@ def main():
         # If there's an issue loading stock data, exit the function
         return
 
-    # Print columns of stock_data to identify the correct column name
-    st.write("Columns of stock_data:", stock_data.columns)
-
     # Select industry and stock
     selected_industry = st.selectbox("Select Industry", industry_data.columns[1:])
     
-    # Modify this line based on the actual column name for stock symbols in your data
+    # Modify this line based on the actual stock symbols in your data
     selected_stock = st.selectbox("Select Stock", stock_data.index.unique())
 
     # Calculate correlation and trendline
@@ -71,8 +67,8 @@ def main():
     plt.figure(figsize=(10, 6))
 
     # Plot stock revenue and industry growth
-    plt.scatter(stock_data["Total Revenue/Income"], industry_data[selected_industry], label="Data points")
-    plt.plot(stock_data["Total Revenue/Income"], trendline, color='red', label="Trendline")
+    plt.scatter(stock_data.loc[selected_stock]["Total Revenue/Income"], industry_data[selected_industry], label="Data points")
+    plt.plot(stock_data.loc[selected_stock]["Total Revenue/Income"], trendline, color='red', label="Trendline")
 
     plt.title(f"Correlation: {correlation:.2f} | Trendline Analysis")
     plt.xlabel("Total Revenue/Income")
@@ -80,4 +76,6 @@ def main():
     plt.legend()
     st.pyplot()
 
-# ...
+# Run the app
+if __name__ == "__main__":
+    main()
