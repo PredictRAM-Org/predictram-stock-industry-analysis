@@ -55,9 +55,14 @@ def main():
         # If there's an issue loading stock data, exit the function
         return
 
+    # Print columns of stock_data to identify the correct column name
+    st.write("Columns of stock_data:", stock_data.columns)
+
     # Select industry and stock
     selected_industry = st.selectbox("Select Industry", industry_data.columns[1:])
-    selected_stock = st.selectbox("Select Stock", stock_data["Stock Symbol"].unique())
+    
+    # Modify this line based on the actual column name for stock symbols in your data
+    selected_stock = st.selectbox("Select Stock", stock_data.index.unique())
 
     # Calculate correlation and trendline
     correlation, trendline = calculate_correlation_and_trend(stock_data, industry_data, selected_stock, selected_industry)
@@ -75,5 +80,4 @@ def main():
     plt.legend()
     st.pyplot()
 
-if __name__ == "__main__":
-    main()
+# ...
