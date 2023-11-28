@@ -80,8 +80,11 @@ if uploaded_stock_revenue_file is not None:
         selected_stock_df = get_stock_data(stock_data_folder, selected_stock)
 
         # Select date range for analysis
-        start_date = st.date_input("Select Start Date", min_value=industry_df["Date"].min(), max_value=industry_df["Date"].max())
-        end_date = st.date_input("Select End Date", min_value=start_date, max_value=industry_df["Date"].max())
+        min_date = industry_df["Date"].min()
+        max_date = industry_df["Date"].max()
+
+        start_date = st.date_input("Select Start Date", min_value=min_date, max_value=max_date, value=min_date)
+        end_date = st.date_input("Select End Date", min_value=start_date, max_value=max_date, value=max_date)
 
         # Display selected industry and stock data
         st.write("Selected Industry Data:")
