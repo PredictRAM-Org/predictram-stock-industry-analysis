@@ -19,7 +19,26 @@ def load_stock_data(file_path):
 
 # Function to calculate correlation and trendline analysis
 def calculate_correlation_and_trend(stock_data, industry_data, selected_stock, selected_industry):
-    # ... (same as before)
+    # Filter selected stock and industry data
+    selected_stock_data = stock_data[stock_data["Stock Symbol"] == selected_stock]
+    selected_industry_data = industry_data[selected_industry]
+
+    # Merge stock and industry data on the "Date" column
+    merged_data = pd.merge(selected_stock_data, selected_industry_data, on="Date")
+
+    # Calculate correlation between stock revenue and industry growth
+    correlation = merged_data["Total Revenue/Income"].corr(merged_data[selected_industry])
+
+    # Prepare data for trendline analysis
+    X = merged_data["Total Revenue/Income"].values.reshape(-1, 1)
+    y = merged_data[selected_industry].values.reshape(-1, 1)
+
+    # Fit a linear regression model
+    model = LinearRegression()
+    model.fit(X, y)
+    trendline = model.predict(X)
+
+    return correlation, trendline
 
 # Streamlit app
 def main():
@@ -38,7 +57,7 @@ def main():
 
     # Select industry and stock
     selected_industry = st.selectbox("Select Industry", industry_data.columns[1:])
-    selected_stock = st.selectbox("Select Stock", [file.split("/")[1].split(".")[0] for file in stock_files])
+    selected_stock = st.selectbox("Select Stock", stock_data["Stock Symbol"].unique())
 
     # Calculate correlation and trendline
     correlation, trendline = calculate_correlation_and_trend(stock_data, industry_data, selected_stock, selected_industry)
