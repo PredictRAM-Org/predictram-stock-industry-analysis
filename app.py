@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 # Load industry growth data
-industry_data = pd.read_excel("IIP_Data.xlsx")
+industry_data = pd.read_excel("IIP_Data.xlsx", parse_dates=["Date"], index_col="Date")
 
 # Function to load stock data
 def load_stock_data(file_path):
     try:
-        stock_data = pd.read_excel(file_path)
+        stock_data = pd.read_excel(file_path, parse_dates=["Date"], index_col="Date")
         return stock_data
     except Exception as e:
         st.error(f"Error loading stock data: {e}")
@@ -24,7 +24,7 @@ def calculate_correlation_and_trend(stock_data, industry_data, selected_stock, s
     selected_industry_data = industry_data[selected_industry]
 
     # Merge stock and industry data on the "Date" column
-    merged_data = pd.merge(selected_stock_data, selected_industry_data, on="Date")
+    merged_data = pd.merge(selected_stock_data, selected_industry_data, left_index=True, right_index=True)
 
     # Calculate correlation between stock revenue and industry growth
     correlation = merged_data["Total Revenue/Income"].corr(merged_data[selected_industry])
