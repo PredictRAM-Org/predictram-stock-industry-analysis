@@ -1,0 +1,5 @@
+pandas
+matplotlib==3.5.2
+numpy
+scikit-learn
+openpyxl
