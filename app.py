@@ -24,9 +24,15 @@ def get_stock_data(stock_data_folder, stock_file):
     return stock_df
 
 # Function to calculate correlation and plot trendline
-def plot_correlation_trendline(stock_revenue_df, industry_df, stock_df, selected_industry):
+def plot_correlation_trendline(stock_revenue_df, industry_df, stock_df, selected_industry, start_date, end_date):
     # Filter industry data based on selection
     selected_industry_data = industry_df[["Date", selected_industry]]
+    
+    # Filter stock revenue data based on selected date range
+    stock_revenue_df = stock_revenue_df[(stock_revenue_df["Date"] >= start_date) & (stock_revenue_df["Date"] <= end_date)]
+    
+    # Filter stock data based on selected date range
+    stock_df = stock_df[(stock_df["Date"] >= start_date) & (stock_df["Date"] <= end_date)]
     
     # Merge dataframes based on Date
     merged_df = pd.merge(stock_revenue_df, selected_industry_data, on="Date", how="inner")
@@ -73,12 +79,16 @@ if uploaded_stock_revenue_file is not None:
         selected_stock = st.selectbox("Select Stock", stock_list)
         selected_stock_df = get_stock_data(stock_data_folder, selected_stock)
 
+        # Select date range for analysis
+        start_date = st.date_input("Select Start Date", min_value=industry_df["Date"].min(), max_value=industry_df["Date"].max())
+        end_date = st.date_input("Select End Date", min_value=start_date, max_value=industry_df["Date"].max())
+
         # Display selected industry and stock data
         st.write("Selected Industry Data:")
-        st.write(industry_df[["Date", selected_industry]])
+        st.write(industry_df[(industry_df["Date"] >= start_date) & (industry_df["Date"] <= end_date)][["Date", selected_industry]])
 
         st.write("Selected Stock Data:")
-        st.write(selected_stock_df)
+        st.write(selected_stock_df[(selected_stock_df["Date"] >= start_date) & (selected_stock_df["Date"] <= end_date)])
 
         # Plot correlation and trendline analysis
-        plot_correlation_trendline(stock_revenue_df, industry_df, selected_stock_df, selected_industry)
+        plot_correlation_trendline(stock_revenue_df, industry_df, selected_stock_df, selected_industry, start_date, end_date)
