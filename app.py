@@ -1,82 +1,80 @@
-import os
 import streamlit as st
 import pandas as pd
-import numpy as np
+import os
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
+import seaborn as sns
 
 # Load industry growth data
-industry_data = pd.read_excel("IIP_Data.xlsx", parse_dates=["Date"], index_col="Date")
+industry_data_path = "IIP_Data.xlsx"
+industry_df = pd.read_excel(industry_data_path, parse_dates=["Date"])
 
-# Function to load stock data
-def load_stock_data(file_path):
-    try:
-        stock_data = pd.read_excel(file_path, parse_dates=["Date"], index_col="Date")
-        return stock_data
-    except Exception as e:
-        st.error(f"Error loading stock data: {e}")
-        return None
+# Load initial stock revenue data
+stock_revenue_path = "stock_revenue.xlsx"
+stock_revenue_df = pd.read_excel(stock_revenue_path, parse_dates=["Date"])
 
-# Function to calculate correlation and trendline analysis
-def calculate_correlation_and_trend(stock_data, industry_data, selected_stock, selected_industry):
-    # Filter selected stock and industry data
-    selected_stock_data = stock_data
-    selected_industry_data = industry_data[selected_industry]
+# Load stock data
+stock_data_folder = "Stock_Data"
 
-    # Merge stock and industry data on the "Date" column
-    merged_data = pd.merge(selected_stock_data, selected_industry_data, left_index=True, right_index=True)
+# Function to get stock list
+def get_stock_list():
+    stock_files = [f for f in os.listdir(stock_data_folder) if f.endswith('.xlsx')]
+    return stock_files
 
-    # Calculate correlation between stock revenue and industry growth
-    correlation = merged_data["Close"].corr(merged_data[selected_industry])
+# Function to get stock data
+def get_stock_data(stock_file):
+    stock_path = os.path.join(stock_data_folder, stock_file)
+    stock_df = pd.read_excel(stock_path, parse_dates=["Date"])
+    return stock_df
 
-    # Prepare data for trendline analysis
-    X = merged_data["Close"].values.reshape(-1, 1)
-    y = merged_data[selected_industry].values.reshape(-1, 1)
+# Function to calculate correlation and plot trendline
+def plot_correlation_trendline(stock_revenue_df, industry_df, stock_df, selected_industry):
+    # Filter industry data based on selection
+    selected_industry_data = industry_df[["Date", selected_industry]]
+    
+    # Merge dataframes based on Date
+    merged_df = pd.merge(stock_revenue_df, selected_industry_data, on="Date", how="inner")
+    merged_df = pd.merge(merged_df, stock_df[["Date", "Close"]], on="Date", how="inner")
+    
+    # Calculate correlation
+    correlation_matrix = merged_df.corr()
+    
+    # Plot correlation matrix heatmap
+    st.subheader("Correlation Matrix Heatmap")
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", linewidths=.5)
+    st.pyplot()
 
-    # Fit a linear regression model
-    model = LinearRegression()
-    model.fit(X, y)
-    trendline = model.predict(X)
-
-    return correlation, trendline
-
-# Streamlit app
-def main():
-    st.title("Stock and Industry Analysis App")
-
-    # Get list of stock files in the "Stock_Data" folder
-    stock_folder_path = "Stock_Data"
-    stock_files = [file for file in os.listdir(stock_folder_path) if file.endswith(".xlsx")]
-
-    # Select stock file
-    selected_stock_file = st.selectbox("Select Stock File", stock_files)
-
-    # Load selected stock data
-    stock_data = load_stock_data(os.path.join(stock_folder_path, selected_stock_file))
-
-    if stock_data is None:
-        # If there's an issue loading stock data, exit the function
-        return
-
-    # Select industry
-    selected_industry = st.selectbox("Select Industry", industry_data.columns[1:])
-
-    # Calculate correlation and trendline
-    correlation, trendline = calculate_correlation_and_trend(stock_data, industry_data, selected_industry, selected_industry)
-
-    # Plotting
+    # Plot trendline
+    st.subheader("Trendline Analysis")
     plt.figure(figsize=(10, 6))
-
-    # Plot stock revenue and industry growth
-    plt.scatter(stock_data["Close"], industry_data[selected_industry], label="Data points")
-    plt.plot(stock_data["Close"], trendline, color='red', label="Trendline")
-
-    plt.title(f"Correlation: {correlation:.2f} | Trendline Analysis")
-    plt.xlabel("Stock Close Price")
-    plt.ylabel(f"{selected_industry} (Industry Growth)")
+    sns.regplot(x="Total Revenue/Income", y=selected_industry, data=merged_df, label="Total Revenue/Income")
+    sns.regplot(x="Total Operating Expense", y=selected_industry, data=merged_df, label="Total Operating Expense")
+    sns.regplot(x="Net Income", y=selected_industry, data=merged_df, label="Net Income")
+    sns.regplot(x="Close", y=selected_industry, data=merged_df, label="Stock Price (Close)")
     plt.legend()
     st.pyplot()
 
-# Run the app
-if __name__ == "__main__":
-    main()
+# Streamlit app
+st.title("Stock Analysis App")
+
+# Upload stock revenue file
+uploaded_stock_revenue_file = st.file_uploader("Upload Stock Revenue File (xlsx)", type=["xlsx"])
+if uploaded_stock_revenue_file is not None:
+    stock_revenue_df = pd.read_excel(uploaded_stock_revenue_file, parse_dates=["Date"])
+
+# Select industry
+selected_industry = st.selectbox("Select Industry", industry_df.columns[1:])
+
+# Select stock
+selected_stock = st.selectbox("Select Stock", get_stock_list())
+selected_stock_df = get_stock_data(selected_stock)
+
+# Display selected industry and stock data
+st.write("Selected Industry Data:")
+st.write(industry_df[["Date", selected_industry]])
+
+st.write("Selected Stock Data:")
+st.write(selected_stock_df)
+
+# Plot correlation and trendline analysis
+plot_correlation_trendline(stock_revenue_df, industry_df, selected_stock_df, selected_industry)
